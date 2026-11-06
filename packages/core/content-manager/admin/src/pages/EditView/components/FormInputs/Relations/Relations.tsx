@@ -750,13 +750,27 @@ const RelationModalWithContext = ({
 
   const options = data?.results ?? [];
 
+  const handleSearch = async (search: string) => {
+    setSearchParams((s) => ({ ...s, _q: search, page: 1 }));
+  };
+
   React.useLayoutEffect(() => {
     setTextValue('');
   }, [fieldValue]);
 
-  const handleSearch = async (search: string) => {
-    setSearchParams((s) => ({ ...s, _q: search, page: 1 }));
-  };
+  /**
+   * Clear the debounced query whenever the value changes (e.g. an option was just
+   * selected). The combobox can report the selected option's label through its own
+   * effects — `onOpenChange`/`onInputChange` — after our layout effect has cleared the
+   * visible text, leaving `_q` searching for an entry that is itself omitted from the
+   * available results. Reopening the dropdown would then search for it and render
+   * "No relations available" instead of the remaining entries. This runs after the
+   * combobox's effects so the reset always wins.
+   */
+  React.useEffect(() => {
+    setSearchParams((s) => ({ ...s, _q: '', page: 1 }));
+  }, [fieldValue, setSearchParams]);
+
   return (
     <RelationModalRenderer>
       {({ dispatch }) => (
